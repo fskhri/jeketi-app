@@ -31,7 +31,7 @@ jobs:
           key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
 
       - name: Set Up Java
-        uses: actions/setup-java@v3.12.0
+        uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
           java-version: '17'
@@ -60,7 +60,19 @@ jobs:
           base_version="${{ env.VERSION }}"
           unique_tag="${base_version}-build-${{ github.run_number }}"
           echo "UNIQUE_TAG=$unique_tag" >> $GITHUB_ENV
-          
+
+      - name: Get Previous Tag
+        id: get_prev_tag
+        run: |
+          prev_tag=$(git describe --tags --abbrev=0)
+          echo "PREV_TAG=$prev_tag" >> $GITHUB_ENV
+
+      - name: Generate Changelog from Commits
+        id: generate_changelog
+        run: |
+          changelog=$(git log ${{ env.PREV_TAG }}..HEAD --pretty=format:"%h - %s (%an)")
+          echo "CHANGELOG=$changelog" >> $GITHUB_ENV
+
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
@@ -68,7 +80,9 @@ jobs:
           tag: v${{ env.UNIQUE_TAG }}
           token: ${{ secrets.KOCAK }}
           name: "Release v${{ env.UNIQUE_TAG }}"
-          body: "Rilis otomatis dari GitHub Actions"
+          body: |
+            ## Changelog
+            ${{ env.CHANGELOG }}
 
       - name: Checkout jeketi-app Repository
         uses: actions/checkout@v3
