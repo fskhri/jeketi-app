@@ -50,7 +50,7 @@ jobs:
           base_version="${{ env.VERSION }}"
           unique_tag="${base_version}-build-${{ github.run_number }}"
           echo "UNIQUE_TAG=$unique_tag" >> $GITHUB_ENV
- 
+          
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
