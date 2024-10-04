@@ -1,0 +1,74 @@
+name: "Build & Release"
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up Java
+        uses: actions/setup-java@v3.12.0
+        with:
+          distribution: 'oracle'
+          java-version: '17'
+
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Generate Unique Tag
+        id: generate_tag
+        run: |
+          base_version="${{ env.VERSION }}"
+          unique_tag="${base_version}-build-${{ github.run_number }}"
+          echo "UNIQUE_TAG=$unique_tag" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/app-release.apk"
+          tag: v${{ env.UNIQUE_TAG }}
+          token: ${{ secrets.TOKEN }}
+          name: "Release v${{ env.UNIQUE_TAG }}"
+          body: "Rilis otomatis dari GitHub Actions"
+
+      - name: Push to jeketi-app Repository
+        uses: actions/checkout@v3
+        with:
+          repository: fskhri/jeketi-app
+          token: ${{ secrets.TOKEN }}
+          
+      - name: Copy files to jeketi-app
+        run: |
+          cp -R . ../jeketi-app/
+          cd ../jeketi-app
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Update from https://github.com/fskhri/jeketi-v2/commit/${{ github.sha }}"
+          git push
