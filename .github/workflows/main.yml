@@ -20,6 +20,22 @@ jobs:
           repository: fskhri/jeketi-v2
           token: ${{ secrets.TOKEN }}
 
+      # Cache Flutter SDK
+      - name: Cache Flutter SDK
+        uses: actions/cache@v3
+        with:
+          path: ~/.flutter-sdk
+          key: ${{ runner.os }}-flutter-sdk-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-sdk-
+
+      - name: Set Up Flutter
+        if: steps.cache-flutter-sdk.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/flutter/flutter.git -b stable ~/.flutter-sdk
+          echo "$HOME/.flutter-sdk/bin" >> $GITHUB_PATH
+
+      # Cache Pub Dependencies
       - name: Cache Flutter Packages
         uses: actions/cache@v3
         with:
@@ -28,19 +44,15 @@ jobs:
             .packages
             .flutter-plugins
             .flutter-plugins-dependencies
-          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
 
       - name: Set Up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
           java-version: '17'
-
-      - name: Set Up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.22.2'
-          channel: 'stable'
 
       - name: Install Dependencies
         run: flutter pub get
