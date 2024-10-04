@@ -56,7 +56,7 @@ jobs:
         with:
           artifacts: "build/app/outputs/flutter-apk/app-release.apk"
           tag: v${{ env.UNIQUE_TAG }}
-          token: ${{ secrets.TOKEN }}
+          token: ${{ secrets.KOCAK }}
           name: "Release v${{ env.UNIQUE_TAG }}"
           body: "Rilis otomatis dari GitHub Actions"
 
