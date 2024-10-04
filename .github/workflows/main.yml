@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          repository: fskhri/jeketi-v2
+          token: ${{ secrets.TOKEN }}
 
       - name: Set Up Java
         uses: actions/setup-java@v3.12.0
@@ -57,12 +60,12 @@ jobs:
           name: "Release v${{ env.UNIQUE_TAG }}"
           body: "Rilis otomatis dari GitHub Actions"
 
-      - name: Push to jeketi-app Repository
+      - name: Checkout jeketi-app Repository
         uses: actions/checkout@v3
         with:
           repository: fskhri/jeketi-app
           token: ${{ secrets.TOKEN }}
-          
+
       - name: Copy files to jeketi-app
         run: |
           cp -R . ../jeketi-app/
