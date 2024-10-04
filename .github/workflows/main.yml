@@ -20,6 +20,16 @@ jobs:
           repository: fskhri/jeketi-v2
           token: ${{ secrets.TOKEN }}
 
+      - name: Cache Flutter Packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            .packages
+            .flutter-plugins
+            .flutter-plugins-dependencies
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
+
       - name: Set Up Java
         uses: actions/setup-java@v3.12.0
         with:
