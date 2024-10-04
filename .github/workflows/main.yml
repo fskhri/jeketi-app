@@ -65,13 +65,3 @@ jobs:
         with:
           repository: fskhri/jeketi-app
           token: ${{ secrets.TOKEN }}
-
-      - name: Copy files to jeketi-app
-        run: |
-          cp -R . ../jeketi-app/
-          cd ../jeketi-app
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .
-          git commit -m "Update from https://github.com/fskhri/jeketi-v2/commit/${{ github.sha }}"
-          git push
