@@ -2,11 +2,9 @@ name: "Build & Release"
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: main
   push:
-    branches:
-      - main
+    branches: main
 
 jobs:
   build:
@@ -29,23 +27,26 @@ jobs:
           flutter-version: '3.22.2'
           channel: 'stable'
 
+      - name: Cache Flutter Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ runner.tool_cache }}/pub
+          key: ${{ runner.os }}-flutter-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-pub-
+
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Extract version from pubspec.yaml
+      - name: Extract Version and Generate Unique Tag
         id: extract_version
         run: |
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          unique_tag="${version}-build-${{ github.run_number }}"
           echo "VERSION=$version" >> $GITHUB_ENV
-
-      - name: Generate Unique Tag
-        id: generate_tag
-        run: |
-          base_version="${{ env.VERSION }}"
-          unique_tag="${base_version}-build-${{ github.run_number }}"
           echo "UNIQUE_TAG=$unique_tag" >> $GITHUB_ENV
 
       - name: Create Release
