@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - main
- 
+
 jobs:
   build:
     name: Build & Release
@@ -16,43 +16,18 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          repository: fskhri/jeketi-v2
-          token: ${{ secrets.TOKEN }}
-
-      # Cache Flutter SDK
-      - name: Cache Flutter SDK
-        uses: actions/cache@v3
-        with:
-          path: ~/.flutter-sdk
-          key: ${{ runner.os }}-flutter-sdk-${{ hashFiles('pubspec.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-flutter-sdk-
-
-      - name: Set Up Flutter
-        if: steps.cache-flutter-sdk.outputs.cache-hit != 'true'
-        run: |
-          git clone https://github.com/flutter/flutter.git -b stable ~/.flutter-sdk
-          echo "$HOME/.flutter-sdk/bin" >> $GITHUB_PATH
-
-      # Cache Pub Dependencies
-      - name: Cache Flutter Packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pub-cache
-            .packages
-            .flutter-plugins
-            .flutter-plugins-dependencies
-          key: ${{ runner.os }}-pub-cache-${{ hashFiles('pubspec.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-cache-
 
       - name: Set Up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v3.12.0
         with:
-          distribution: 'adopt'
+          distribution: 'oracle'
           java-version: '17'
+
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
 
       - name: Install Dependencies
         run: flutter pub get
@@ -73,30 +48,16 @@ jobs:
           unique_tag="${base_version}-build-${{ github.run_number }}"
           echo "UNIQUE_TAG=$unique_tag" >> $GITHUB_ENV
 
-      - name: Get Previous Tag
-        id: get_prev_tag
-        run: |
-          prev_tag=$(git describe --tags --abbrev=0)
-          echo "PREV_TAG=$prev_tag" >> $GITHUB_ENV
-
-      - name: Generate Changelog from Commits
-        id: generate_changelog
-        run: |
-          changelog=$(git log ${{ env.PREV_TAG }}..HEAD --pretty=format:"%h - %s (%an)")
-          echo "CHANGELOG=$changelog" >> $GITHUB_ENV
-
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/flutter-apk/app-release.apk"
           tag: v${{ env.UNIQUE_TAG }}
-          token: ${{ secrets.KOCAK }}
+          token: ${{ secrets.TOKEN }}
           name: "Release v${{ env.UNIQUE_TAG }}"
-          body: |
-            ## Changelog
-            ${{ env.CHANGELOG }}
+          body: "Rilis otomatis dari GitHub Actions"
 
-      - name: Checkout jeketi-app Repository
+      - name: Push to jeketi-app Repository
         uses: actions/checkout@v3
         with:
           repository: fskhri/jeketi-app
