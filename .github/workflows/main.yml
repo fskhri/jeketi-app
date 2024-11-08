@@ -2,9 +2,9 @@ name: "Build & Release"
 
 on:
   pull_request:
-    branches: main
+    branches: [main]
   push:
-    branches: main
+    branches: [main]
 
 jobs:
   build:
@@ -31,15 +31,17 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ runner.tool_cache }}/pub
-          key: ${{ runner.os }}-flutter-pub-${{ hashFiles('**/pubspec.yaml') }}
+          key: ${{ runner.os }}-flutter-pub-${{ hashFiles('**/jeketi-app/pubspec.yaml') }}
           restore-keys: |
             ${{ runner.os }}-flutter-pub-
 
       - name: Install Dependencies
         run: flutter pub get
+        working-directory: jeketi-app  # Adjust this path to your project root
 
       - name: Build APK
         run: flutter build apk --release
+        working-directory: jeketi-app  # Adjust this path to your project root
 
       - name: Extract Version and Generate Unique Tag
         id: extract_version
@@ -48,11 +50,12 @@ jobs:
           unique_tag="${version}-build-${{ github.run_number }}"
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "UNIQUE_TAG=$unique_tag" >> $GITHUB_ENV
+        working-directory: jeketi-app  # Adjust this path to your project root
 
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/flutter-apk/app-release.apk"
+          artifacts: "jeketi-app/build/app/outputs/flutter-apk/app-release.apk"
           tag: v${{ env.UNIQUE_TAG }}
           token: ${{ secrets.TOKEN }}
           name: "Release v${{ env.UNIQUE_TAG }}"
