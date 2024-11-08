@@ -37,20 +37,25 @@ jobs:
 
       - name: Install Dependencies
         run: flutter pub get
-        working-directory: jeketi-app  # Adjust this path to your project root
+        working-directory: jeketi-app  # Adjust this to your actual project root
 
       - name: Build APK
         run: flutter build apk --release
-        working-directory: jeketi-app  # Adjust this path to your project root
+        working-directory: jeketi-app  # Adjust this to your actual project root
 
-      - name: Extract Version and Generate Unique Tag
+      - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
-          unique_tag="${version}-build-${{ github.run_number }}"
           echo "VERSION=$version" >> $GITHUB_ENV
+        working-directory: jeketi-app  # Adjust this to your actual project root
+
+      - name: Generate Unique Tag
+        id: generate_tag
+        run: |
+          base_version="${{ env.VERSION }}"
+          unique_tag="${base_version}-build-${{ github.run_number }}"
           echo "UNIQUE_TAG=$unique_tag" >> $GITHUB_ENV
-        working-directory: jeketi-app  # Adjust this path to your project root
 
       - name: Create Release
         uses: ncipollo/release-action@v1
@@ -61,8 +66,14 @@ jobs:
           name: "Release v${{ env.UNIQUE_TAG }}"
           body: "Rilis otomatis dari GitHub Actions"
 
-      - name: Push to jeketi-app Repository
-        uses: actions/checkout@v3
-        with:
-          repository: fskhri/jeketi-app
-          token: ${{ secrets.TOKEN }}
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          
+      - name: Push Changes
+        run: |
+          git add .
+          git commit -m "Release v${{ env.UNIQUE_TAG }}"
+          git push https://${{ secrets.TOKEN }}@github.com/fskhri/jeketi-app.git
+        continue-on-error: true
