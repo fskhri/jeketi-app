@@ -54,20 +54,13 @@ jobs:
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
           echo "VERSION=$version" >> $GITHUB_ENV
 
-      - name: Generate Unique Tag
-        id: generate_tag
-        run: |
-          base_version="${{ env.VERSION }}"
-          unique_tag="${base_version}-build-${{ github.run_number }}"
-          echo "UNIQUE_TAG=$unique_tag" >> $GITHUB_ENV
-          
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/flutter-apk/app-release.apk"
-          tag: v${{ env.UNIQUE_TAG }}
+          tag: v${{ env.VERSION }}
           token: ${{ secrets.KOCAK }}
-          name: "Release v${{ env.UNIQUE_TAG }}"
+          name: "Release v${{ env.VERSION }}"
           body: "Rilis otomatis dari GitHub Actions"
 
       - name: Checkout jeketi-app Repository
